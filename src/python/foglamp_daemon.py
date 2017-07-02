@@ -34,22 +34,6 @@ def do_something(logf):
     start()
 
 
-from time import sleep
-import signal
-import sys
-
-
-def sigterm_handler(_signo, _stack_frame):
-    # Raises SystemExit(0):
-    sys.stderr.write('Hi')
-    sys.exit(0)
-
-
-def sighup_handler(signum, frame):
-    # handler code goes here
-    sys.stderr.write("Caught SIGHUP!")
-
-
 def start_daemon(pidf, logf, wdir):
     """
     Launches the daemon
@@ -58,26 +42,14 @@ def start_daemon(pidf, logf, wdir):
     :param logf: log file
     :param wdir: working directory
     """
-    run_in_separate_process(pidf, logf, wdir)
 
-    return is_running()
-
-def run_in_separate_process(pidf, logf, wdir):
-    pid = os.fork()
-    if pid > 0:
-        sys.stderr.write("Inside Parent!")
-        # XXX: pidfile is a context
-        with daemon.DaemonContext(
-            working_directory=wdir,
-            umask=0o002,
-            pidfile=pidfile.TimeoutPIDLockFile(pidf),
-            stderr=sys.stderr
-            # signal_map={signal.SIGTERM: sigterm_handler, signal.SIGHUP: sighup_handler, }
-        ) as context:
-            do_something(logf)
-        os._exit(0)
-    else:
-        sys.stderr.write("Inside another process")
+    # XXX: pidfile is a context
+    with daemon.DaemonContext(
+        working_directory=wdir,
+        umask=0o002,
+        pidfile=pidfile.TimeoutPIDLockFile(pidf)
+    ) as context:
+        do_something(logf)
 
 
 def stop_daemon(pidf=PIDFILE):
@@ -179,6 +151,34 @@ def find_process_info(process_name):
         "status": process[0].status(),
         "start_time": process[0].create_time()
     })
+
+def start_server_process():
+    """
+    Start Foglampd via Admin UI
+    """
+
+    import subprocess
+
+    f_ps = subprocess.Popen("foglampd start", shell=True, stdout = subprocess.PIPE)
+
+    time.sleep(2)
+
+    return is_running()
+
+
+def restart_server_process():
+    """
+    Restart Foglampd via Admin UI
+    """
+
+    if is_running():
+        stop_daemon()
+
+    start_server_process()
+
+    time.sleep(2)
+
+    return is_running()
 
 
 def main():

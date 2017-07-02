@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from aiohttp import web
-from foglamp_daemon import find_process_info, is_running, get_pid, start_daemon, do_something, stop_daemon, restart_daemon, PIDFILE, LOGFILE, WORKING_DIR
+from foglamp_daemon import find_process_info, is_running, get_pid, stop_daemon, PIDFILE, LOGFILE, WORKING_DIR, start_server_process, restart_server_process
 
 async def ping(request):
     """
@@ -26,9 +26,7 @@ async def ping(request):
     return web.json_response({'uptime': since_started})
 
 async def server_start(request):
-    retmsg = start_daemon(pidf=os.path.expanduser(PIDFILE),
-                 logf=os.path.expanduser(LOGFILE),
-                 wdir=os.path.expanduser(WORKING_DIR))
+    retmsg = start_server_process()
     return web.json_response({'foglamp daemon status': is_running()})
 
 async def server_stop(request):
@@ -36,7 +34,7 @@ async def server_stop(request):
     return web.json_response({'foglamp daemon status': is_running()})
 
 async def server_restart(request):
-    retmsg = restart_daemon()
+    retmsg = restart_server_process()
     return web.json_response({'foglamp daemon status': is_running()})
 
 async def server_status(request):
