@@ -34,6 +34,22 @@ def do_something(logf):
     start()
 
 
+from time import sleep
+import signal
+import sys
+
+
+def sigterm_handler(_signo, _stack_frame):
+    # Raises SystemExit(0):
+    sys.stderr.write('Hi')
+    sys.exit(0)
+
+
+def sighup_handler(signum, frame):
+    # handler code goes here
+    sys.stderr.write("Caught SIGHUP!")
+
+
 def start_daemon(pidf, logf, wdir):
     """
     Launches the daemon
@@ -42,14 +58,26 @@ def start_daemon(pidf, logf, wdir):
     :param logf: log file
     :param wdir: working directory
     """
+    run_in_separate_process(pidf, logf, wdir)
 
-    # XXX: pidfile is a context
-    with daemon.DaemonContext(
-        working_directory=wdir,
-        umask=0o002,
-        pidfile=pidfile.TimeoutPIDLockFile(pidf)
-    ) as context:
-        do_something(logf)
+    return is_running()
+
+def run_in_separate_process(pidf, logf, wdir):
+    pid = os.fork()
+    if pid > 0:
+        sys.stderr.write("Inside Parent!")
+        # XXX: pidfile is a context
+        with daemon.DaemonContext(
+            working_directory=wdir,
+            umask=0o002,
+            pidfile=pidfile.TimeoutPIDLockFile(pidf),
+            stderr=sys.stderr
+            # signal_map={signal.SIGTERM: sigterm_handler, signal.SIGHUP: sighup_handler, }
+        ) as context:
+            do_something(logf)
+        os._exit(0)
+    else:
+        sys.stderr.write("Inside another process")
 
 
 def stop_daemon(pidf=PIDFILE):
@@ -63,7 +91,7 @@ def stop_daemon(pidf=PIDFILE):
     if pid is None:
         message = "pidfile %s does not exist. Daemon not running?\n"
         sys.stderr.write(message % pidf)
-        return  # not an error in a restart
+        return is_running()
 
     # Try killing the daemon process
     try:
@@ -78,6 +106,8 @@ def stop_daemon(pidf=PIDFILE):
         else:
             sys.stdout.write(str(err))
             sys.exit(1)
+
+    return is_running()
 
 
 def restart_daemon(pidf=PIDFILE):
@@ -94,6 +124,8 @@ def restart_daemon(pidf=PIDFILE):
     start_daemon(pidf=os.path.expanduser(PIDFILE),
                  logf=os.path.expanduser(LOGFILE),
                  wdir=os.path.expanduser(WORKING_DIR))
+
+    return is_running()
 
 
 def is_running(pidf=PIDFILE):

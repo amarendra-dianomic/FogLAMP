@@ -6,10 +6,14 @@
 
 from foglamp.rest_service import api
 
-
 def setup(app):
     # app.router.add_route('POST', '/foglamp/a-post-req', api.a_post_req, expect_handler = aiohttp.web.Request.json)
     app.router.add_route('GET', '/foglamp/ping', api.ping)
+    app.router.add_route('GET', '/foglamp/status', api.server_status)
+    app.router.add_route('GET', '/foglamp/pid', api.server_pid)
+    app.router.add_route('GET', '/foglamp/start', api.server_start)
+    app.router.add_route('GET', '/foglamp/stop', api.server_stop)
+    app.router.add_route('GET', '/foglamp/restart', api.server_restart)
 
     # enable cors only in dev mode ?!
     enable_cors(app)
