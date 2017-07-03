@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """Runs foglamp as a daemon"""
@@ -18,6 +17,11 @@ from foglamp.controller import start as start_controller
 PIDFILE = '~/var/run/foglamp.pid'
 LOGFILE = '~/var/log/foglamp.log'
 WORKING_DIR = '~/var/log'
+
+# Full path location of daemon files
+pidf = os.path.expanduser(PIDFILE)
+logf = os.path.expanduser(LOGFILE)
+wdir = os.path.expanduser(WORKING_DIR)
 
 
 def do_something(logf):
@@ -49,7 +53,10 @@ def run():
     """
 
     # Stop the running process, if any, to clear the PID file
-    stop()
+    if is_running():
+        message = "Daemon already running. Check PID %s.\n"
+        sys.stderr.write(message % get_pid())
+        return is_running()
 
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger("foglamp").setLevel(logging.DEBUG)
@@ -57,16 +64,11 @@ def run():
     start_controller()
 
 
-def start(pidf, logf, wdir):
+def start():
     """
     Launches the daemon
-
-    :param pidf: pidfile
-    :param logf: log file
-    :param wdir: working directory
     """
 
-    # XXX: pidfile is a context
     with daemon.DaemonContext(
         working_directory=wdir,
         umask=0o002,
@@ -74,14 +76,13 @@ def start(pidf, logf, wdir):
     ) as context:
         do_something(logf)
 
-
-def stop(pidf=PIDFILE):
+def stop():
     """
     Stop the daemon
     """
 
     # Get the pid from the pidfile
-    pid = get_pid(pidf)
+    pid = get_pid()
 
     if pid is None:
         message = "pidfile %s does not exist. Daemon not running?\n"
@@ -105,7 +106,7 @@ def stop(pidf=PIDFILE):
     return is_running()
 
 
-def restart(pidf=PIDFILE):
+def restart():
     """
     Relaunches the daemon
 
@@ -114,30 +115,28 @@ def restart(pidf=PIDFILE):
     :param wdir: working directory
     """
 
-    if is_running(pidf):
-        stop(pidf)
-    start(pidf=os.path.expanduser(PIDFILE),
-          logf=os.path.expanduser(LOGFILE),
-          wdir=os.path.expanduser(WORKING_DIR))
+    if is_running():
+        stop()
+    start()
 
     return is_running()
 
 
-def is_running(pidf=PIDFILE):
+def is_running():
     """
     Check if the daemon is running.
     """
 
-    return get_pid(pidf) is not None
+    return get_pid() is not None
 
 
-def get_pid(pidf=PIDFILE):
+def get_pid():
     """
     Returns the PID from pidf
     """
 
     try:
-        pf = open(os.path.expanduser(pidf),'r')
+        pf = open(pidf,'r')
         pid = int(pf.read().strip())
         pf.close()
     except (IOError, TypeError):
@@ -165,14 +164,10 @@ def main():
     safe_makedirs(os.path.dirname(LOGFILE))
 
     if len(sys.argv) == 1:
-        start(pidf=os.path.expanduser(PIDFILE),
-              logf=os.path.expanduser(LOGFILE),
-              wdir=os.path.expanduser(WORKING_DIR))
+        start()
     elif len(sys.argv) == 2:
             if 'start' == sys.argv[1]:
-                start(pidf=os.path.expanduser(PIDFILE),
-                      logf=os.path.expanduser(LOGFILE),
-                      wdir=os.path.expanduser(WORKING_DIR))
+                start()
             elif 'stop' == sys.argv[1]:
                 stop()
             elif 'restart' == sys.argv[1]:
@@ -188,6 +183,3 @@ def main():
     else:
         print("usage: foglampd start|stop|restart|status|info")
         sys.exit(2)
-
-if __name__ == "__main__":
-    run()
