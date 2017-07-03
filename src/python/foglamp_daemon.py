@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """Runs foglamp as a daemon"""
 
 import os
-
-import argparse
 import logging
+import psutil
 import signal
 import sys
 import time
@@ -12,12 +14,16 @@ from daemon import pidfile
 
 from foglamp.controller import start
 
+# Location of daemon files
 PIDFILE = '~/var/run/foglamp.pid'
 LOGFILE = '~/var/log/foglamp.log'
 WORKING_DIR = '~/var/log'
 
+
 def do_something(logf):
     """
+    The main daemon method call
+
     :param logf: log file
     """
     file_handler = logging.FileHandler(logf)
@@ -32,10 +38,22 @@ def do_something(logf):
     logger.addHandler(file_handler)
     logger.setLevel(logging.DEBUG)
 
+    # The main daemon process
     start()
 
 
-def start_daemon(pidf, logf, wdir):
+def run():
+    """
+    Run foglamp server in foreground
+    :return:
+    """
+
+    # Stop the running process, if any, to clear the PID file
+    stop()
+    do_something(logf=os.path.expanduser(LOGFILE))
+
+
+def startd(pidf, logf, wdir):
     """
     Launches the daemon
 
@@ -53,7 +71,7 @@ def start_daemon(pidf, logf, wdir):
         do_something(logf)
 
 
-def stop_daemon(pidf=PIDFILE):
+def stop(pidf=PIDFILE):
     """
     Stop the daemon
     """
@@ -64,7 +82,7 @@ def stop_daemon(pidf=PIDFILE):
     if pid is None:
         message = "pidfile %s does not exist. Daemon not running?\n"
         sys.stderr.write(message % pidf)
-        return  # not an error in a restart
+        return is_running()
 
     # Try killing the daemon process
     try:
@@ -80,10 +98,12 @@ def stop_daemon(pidf=PIDFILE):
             sys.stdout.write(str(err))
             sys.exit(1)
 
+    return is_running()
 
-def restart_daemon(pidf=PIDFILE):
+
+def restart(pidf=PIDFILE):
     """
-    Launches the daemon
+    Relaunches the daemon
 
     :param pidf: pidfile
     :param logf: log file
@@ -91,16 +111,19 @@ def restart_daemon(pidf=PIDFILE):
     """
 
     if is_running(pidf):
-        stop_daemon(pidf)
-    start_daemon(pidf=os.path.expanduser(PIDFILE),
-                 logf=os.path.expanduser(LOGFILE),
-                 wdir=os.path.expanduser(WORKING_DIR))
+        stop(pidf)
+    startd(pidf=os.path.expanduser(PIDFILE),
+           logf=os.path.expanduser(LOGFILE),
+           wdir=os.path.expanduser(WORKING_DIR))
+
+    return is_running()
 
 
 def is_running(pidf=PIDFILE):
     """
     Check if the daemon is running.
     """
+
     return get_pid(pidf) is not None
 
 
@@ -118,10 +141,12 @@ def get_pid(pidf=PIDFILE):
 
     return pid
 
+
 def safe_makedirs(directory):
     """
     :param directory: working directory
     """
+
     directory = os.path.expanduser(directory)
     try:
         os.makedirs(directory, 0o750)
@@ -136,29 +161,31 @@ def main():
     safe_makedirs(os.path.dirname(LOGFILE))
 
     if len(sys.argv) == 1:
-        start_daemon(pidf=os.path.expanduser(PIDFILE),
-                     logf=os.path.expanduser(LOGFILE),
-                     wdir=os.path.expanduser(WORKING_DIR))
+        startd(pidf=os.path.expanduser(PIDFILE),
+               logf=os.path.expanduser(LOGFILE),
+               wdir=os.path.expanduser(WORKING_DIR))
     elif len(sys.argv) == 2:
             if 'start' == sys.argv[1]:
-                start_daemon(pidf=os.path.expanduser(PIDFILE),
-                             logf=os.path.expanduser(LOGFILE),
-                             wdir=os.path.expanduser(WORKING_DIR))
+                startd(pidf=os.path.expanduser(PIDFILE),
+                       logf=os.path.expanduser(LOGFILE),
+                       wdir=os.path.expanduser(WORKING_DIR))
             elif 'stop' == sys.argv[1]:
-                stop_daemon()
+                stop()
             elif 'restart' == sys.argv[1]:
-                restart_daemon()
+                restart()
             elif 'status' == sys.argv[1]:
                 print(is_running())
             elif 'info' == sys.argv[1]:
                 print(get_pid())
+            elif 'run' == sys.argv[1]:
+                run()
             else:
                 print("Unknown argument")
                 sys.exit(2)
             sys.exit(0)
     else:
-        print("usage: foglampd start|stop|restart|status|info")
+        print("usage: foglampd run|start|stop|restart|status|info")
         sys.exit(2)
 
 if __name__ == "__main__":
-    main()
+    run()
