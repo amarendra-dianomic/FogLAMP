@@ -12,7 +12,7 @@ import time
 import daemon
 from daemon import pidfile
 
-from foglamp.controller import start
+from foglamp.controller import start as start_controller
 
 # Location of daemon files
 PIDFILE = '~/var/run/foglamp.pid'
@@ -39,7 +39,7 @@ def do_something(logf):
     logger.setLevel(logging.DEBUG)
 
     # The main daemon process
-    start()
+    start_controller()
 
 
 def run():
@@ -50,10 +50,14 @@ def run():
 
     # Stop the running process, if any, to clear the PID file
     stop()
-    do_something(logf=os.path.expanduser(LOGFILE))
+
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger("foglamp").setLevel(logging.DEBUG)
+
+    start_controller()
 
 
-def startd(pidf, logf, wdir):
+def start(pidf, logf, wdir):
     """
     Launches the daemon
 
@@ -112,9 +116,9 @@ def restart(pidf=PIDFILE):
 
     if is_running(pidf):
         stop(pidf)
-    startd(pidf=os.path.expanduser(PIDFILE),
-           logf=os.path.expanduser(LOGFILE),
-           wdir=os.path.expanduser(WORKING_DIR))
+    start(pidf=os.path.expanduser(PIDFILE),
+          logf=os.path.expanduser(LOGFILE),
+          wdir=os.path.expanduser(WORKING_DIR))
 
     return is_running()
 
@@ -210,14 +214,14 @@ def main():
     safe_makedirs(os.path.dirname(LOGFILE))
 
     if len(sys.argv) == 1:
-        startd(pidf=os.path.expanduser(PIDFILE),
-               logf=os.path.expanduser(LOGFILE),
-               wdir=os.path.expanduser(WORKING_DIR))
+        start(pidf=os.path.expanduser(PIDFILE),
+              logf=os.path.expanduser(LOGFILE),
+              wdir=os.path.expanduser(WORKING_DIR))
     elif len(sys.argv) == 2:
             if 'start' == sys.argv[1]:
-                startd(pidf=os.path.expanduser(PIDFILE),
-                       logf=os.path.expanduser(LOGFILE),
-                       wdir=os.path.expanduser(WORKING_DIR))
+                start(pidf=os.path.expanduser(PIDFILE),
+                      logf=os.path.expanduser(LOGFILE),
+                      wdir=os.path.expanduser(WORKING_DIR))
             elif 'stop' == sys.argv[1]:
                 stop()
             elif 'restart' == sys.argv[1]:
@@ -226,14 +230,12 @@ def main():
                 print(is_running())
             elif 'info' == sys.argv[1]:
                 print(get_pid())
-            elif 'run' == sys.argv[1]:
-                run()
             else:
                 print("Unknown argument")
                 sys.exit(2)
             sys.exit(0)
     else:
-        print("usage: foglampd run|start|stop|restart|status|info")
+        print("usage: foglampd start|stop|restart|status|info")
         sys.exit(2)
 
 if __name__ == "__main__":
