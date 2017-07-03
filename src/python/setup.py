@@ -11,7 +11,7 @@ setup(
     packages=['foglamp'],
     entry_points={
         'console_scripts': [
-            'foglamp = foglamp_start:main',
+            'foglamp = foglamp_daemon:run',
             'foglampd = foglamp_daemon:main',
         ],
     },
