@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""Runs foglamp as a daemon"""
+# FOGLAMP_BEGIN
+# See: http://foglamp.readthedocs.io/
+# FOGLAMP_END
 
 import os
 import logging
-import psutil
 import signal
 import sys
 import time
@@ -12,6 +13,11 @@ import daemon
 from daemon import pidfile
 
 from foglamp.controller import start as start_controller
+
+__author__    = "${FULL_NAME}"
+__copyright__ = "Copyright (c) 2017 OSIsoft, LLC"
+__license__   = "Apache 2.0"
+__version__   = "${VERSION}"
 
 # Location of daemon files
 PIDFILE = '~/var/run/foglamp.pid'
@@ -52,7 +58,6 @@ def run():
     :return:
     """
 
-    # Stop the running process, if any, to clear the PID file
     if is_running():
         message = "Daemon already running. Check PID %s.\n"
         sys.stderr.write(message % get_pid())
@@ -68,6 +73,14 @@ def start():
     """
     Launches the daemon
     """
+
+    # Get the pid from the pidfile
+    pid = get_pid()
+
+    if pid is not None:
+        message = "Daemon already running under PID %s.\n"
+        sys.stderr.write(message % pid)
+        return is_running()
 
     with daemon.DaemonContext(
         working_directory=wdir,
