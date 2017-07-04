@@ -14,7 +14,7 @@ from daemon import pidfile
 
 from foglamp.controller import start as start_controller
 
-__author__    = "${FULL_NAME}"
+__author__    = "Terris Linenbach"
 __copyright__ = "Copyright (c) 2017 OSIsoft, LLC"
 __license__   = "Apache 2.0"
 __version__   = "${VERSION}"
