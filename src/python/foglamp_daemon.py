@@ -36,8 +36,9 @@ def do_something(logf):
 
     :param logf: log file
     """
+
     file_handler = logging.FileHandler(logf)
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.WARNING)
 
     formatstr = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     formatter = logging.Formatter(formatstr)
@@ -46,7 +47,7 @@ def do_something(logf):
 
     logger = logging.getLogger('')
     logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
 
     # The main daemon process
     start_controller()
@@ -55,7 +56,6 @@ def do_something(logf):
 def run():
     """
     Run foglamp server in foreground
-    :return:
     """
 
     if is_running():
@@ -63,8 +63,8 @@ def run():
         sys.stderr.write(message % get_pid())
         return is_running()
 
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger("foglamp").setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("foglamp").setLevel(logging.WARNING)
 
     start_controller()
 
@@ -98,7 +98,7 @@ def stop():
     pid = get_pid()
 
     if pid is None:
-        message = "pidfile %s does not exist. Daemon not running?\n"
+        message = "pidfile %s does not exist. Daemon not running.\n"
         sys.stderr.write(message % pidf)
         return is_running()
 
@@ -122,10 +122,6 @@ def stop():
 def restart():
     """
     Relaunches the daemon
-
-    :param pidf: pidfile
-    :param logf: log file
-    :param wdir: working directory
     """
 
     if is_running():
@@ -138,6 +134,8 @@ def restart():
 def is_running():
     """
     Check if the daemon is running.
+
+    :return boolean status as True|False
     """
 
     return get_pid() is not None
