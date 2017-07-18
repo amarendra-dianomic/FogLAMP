@@ -44,10 +44,6 @@ class StatisticsServices:
     async def get_metrics(cls, payload):
         pass
 
-    @classmethod
-    async def purge_metrics(cls, payload):
-        pass
-
 
 class DeviceServices:
     @classmethod
@@ -81,11 +77,6 @@ class DeviceServices:
         pass
 
 
-    @classmethod
-    async def purge_readings(cls):
-        pass
-
-
 class SchedulerServices:
     pass
 
@@ -103,4 +94,10 @@ class SendServices:
 
 
 class PurgeServices:
-    pass
+    @classmethod
+    async def purge_metrics(cls, payload):
+        pass
+
+    @classmethod
+    async def purge_readings(cls):
+        pass
