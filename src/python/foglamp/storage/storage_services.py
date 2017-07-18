@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-"""FOGLAMP_PRELUDE_BEGIN
-{{FOGLAMP_LICENSE_DESCRIPTION}}
 
-See: http://foglamp.readthedocs.io/
+# FOGLAMP_BEGIN
+# See: http://foglamp.readthedocs.io/
+# FOGLAMP_END
 
-Copyright (c) 2017 OSIsoft, LLC
-License: Apache 2.0
-
-FOGLAMP_PRELUDE_END
+"""Storage Services as needed by Processes
 """
 
 import logging
@@ -20,15 +17,16 @@ import time
 from sqlalchemy.dialects.postgresql import JSONB
 import foglamp.storage.tables
 
-"""Storage Services as needed by Processes"""
 
-__author__ = 'Amarendra'
-__version__ = '${VERSION}'
+__author__ = "Amarendra Kumar Sinha"
+__copyright__ = "Copyright (c) 2017 OSIsoft, LLC"
+__license__ = "Apache 2.0"
+__version__ = "${VERSION}"
 
 
 class StatisticsServices:
     @classmethod
-    async def add_metrics(self, payload):
+    async def add_metrics(cls, payload):
         async with aiopg.sa.create_engine(foglamp.storage.tables.db_connection_url) as engine:
             async with engine.acquire() as conn:
                 try:
@@ -39,21 +37,21 @@ class StatisticsServices:
                         'Error in adding statistics key {}:\n{}'.format(payload['key'], payload))
 
     @classmethod
-    async def aggregate_metrics(self, payload):
+    async def aggregate_metrics(cls, payload):
         pass
 
     @classmethod
-    async def get_metrics(self, payload):
+    async def get_metrics(cls, payload):
         pass
 
     @classmethod
-    async def purge_metrics(self, payload):
+    async def purge_metrics(cls, payload):
         pass
 
 
 class DeviceServices:
     @classmethod
-    async def add_reading(self, payload):
+    async def add_reading(cls, payload):
         # Required keys in the payload
         asset = payload['asset']
         timestamp = payload['timestamp']
@@ -79,13 +77,17 @@ class DeviceServices:
                         'key': 'DISCARDED', 'description': asset, 'value': readings})
 
     @classmethod
-    async def get_readings(self):
+    async def get_readings(cls):
         pass
 
 
     @classmethod
-    async def purge_readings(self):
+    async def purge_readings(cls):
         pass
+
+
+class SchedulerServices:
+    pass
 
 
 class ConfigurationServices:

@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-"""FOGLAMP_PRELUDE_BEGIN
-{{FOGLAMP_LICENSE_DESCRIPTION}}
 
-See: http://foglamp.readthedocs.io/
+# FOGLAMP_BEGIN
+# See: http://foglamp.readthedocs.io/
+# FOGLAMP_END
 
-Copyright (c) 2017 OSIsoft, LLC
-License: Apache 2.0
-
-FOGLAMP_PRELUDE_END
+"""FogLamp Database Table Definitions
 """
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Index, Integer, JSON, MetaData, SmallInteger, String, Table, Time, text
 from sqlalchemy.dialects.postgresql.base import INET, UUID
 from sqlalchemy.dialects.postgresql import JSONB
 
-__author__ = 'Amarendra'
-__version__ = '${VERSION}'
+
+__author__ = "Amarendra Kumar Sinha"
+__copyright__ = "Copyright (c) 2017 OSIsoft, LLC"
+__license__ = "Apache 2.0"
+__version__ = "${VERSION}"
+
 
 db_connection_url = 'postgresql://foglamp:foglamp@localhost:5432/foglamp'
 metadata = MetaData()
