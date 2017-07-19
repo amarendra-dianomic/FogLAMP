@@ -18,7 +18,9 @@ __license__ = "Apache 2.0"
 __version__ = "${VERSION}"
 
 
-db_connection_url = 'postgresql://foglamp:foglamp@localhost:5432/foglamp'
+db_connection_url = "dbname='foglamp'"
+# 'postgresql://foglamp:foglamp@localhost:5432/foglamp'
+
 metadata = MetaData()
 
 
